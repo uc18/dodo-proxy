@@ -1,13 +1,14 @@
+using System.Net.Http;
 using LousBot.Service.Interfaces;
 
 namespace LousBot.Service;
 
 public class HttpService : IHttpService
 {
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _httpClient = new();
 
-    public HttpService(HttpClient httpClient)
+    public HttpClient ReturnHttpClient()
     {
-        _httpClient = httpClient;
+        return _httpClient;
     }
 }

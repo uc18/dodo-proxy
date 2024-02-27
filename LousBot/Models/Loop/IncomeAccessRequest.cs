@@ -8,6 +8,8 @@ public record IncomeAccessRequest
 
     public string command { get; set; } = string.Empty;
 
+    public string user_id { get; set; } = string.Empty;
+
     public string user_name { get; set; } = string.Empty;
 
     public string token { get; set; } = string.Empty;

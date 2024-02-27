@@ -13,6 +13,6 @@ public class Dialog
     [JsonPropertyName("elements")]
     public Element[] Elements { get; set; }
 
-    [JsonPropertyName("sumbit_label")]
-    public string SumbitLabel { get; set; }
+    [JsonPropertyName("submit_label")]
+    public string SubmitLabel { get; set; } = "Request";
 }

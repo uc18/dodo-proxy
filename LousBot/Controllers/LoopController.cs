@@ -10,13 +10,10 @@ namespace LousBot.Controllers;
 [Route("/api/[controller]")]
 public class LoopController : ControllerBase
 {
-    private readonly IPyrusService _pyrusService;
     private readonly ILoopService _loopService;
 
-    public LoopController(IPyrusService pyrusService,
-        ILoopService loopService)
+    public LoopController(ILoopService loopService)
     {
-        _pyrusService = pyrusService;
         _loopService = loopService;
     }
 
@@ -26,12 +23,10 @@ public class LoopController : ControllerBase
         Console.WriteLine($"Пришел запрос {request.command}, {request.text}");
         if (_loopService.IsValidRequest(request.text))
         {
+
             var result = await _loopService.SendForm(request);
             return result ? Ok() : BadRequest();
         }
-
-        // TODO: получить список сервисов из пайруса
-        // TODO: далее завершить всю магию обмена задачами
         await _loopService.SendHelpMessage(request);
 
         return Ok();

@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using LousBot.Extension;
 using LousBot.Models.Loop;
+using LousBot.Models.Pyrus;
 using LousBot.Options;
 using LousBot.Service.Interfaces;
 using Microsoft.Extensions.Options;
@@ -12,12 +15,14 @@ public class LoopService : ILoopService
 {
     private readonly IOptions<ServiceDeskOptions> _options;
     private readonly IMattermostService _mattermostService;
+    private readonly PyrusBotService _pyrusBotService;
 
     public LoopService(IOptions<ServiceDeskOptions> options,
-        IMattermostService mattermostService)
+        IMattermostService mattermostService, PyrusBotService pyrusBotService)
     {
         _options = options;
         _mattermostService = mattermostService;
+        _pyrusBotService = pyrusBotService;
     }
 
     public bool IsValidRequest(string text)
@@ -32,9 +37,10 @@ public class LoopService : ILoopService
 
     public async Task<bool> SendForm(IncomeAccessRequest request)
     {
+        var result = await _pyrusBotService.GetForms();
         var form = request.text switch
         {
-            "1" => PrepareModalFormAccessToService(request.trigger_id),
+            "1" => PrepareModalFormAccessToService(request.trigger_id, result),
             "2" => PrepareModalFormBuySoftware(request.trigger_id),
             _ => null
         };
@@ -59,8 +65,14 @@ public class LoopService : ILoopService
         }
     }
 
-    private ModalForm PrepareModalFormAccessToService(string triggerId)
+    private ModalForm PrepareModalFormAccessToService(string triggerId, IEnumerable<ServiceResponse> servicesName)
     {
+        var elements = servicesName.Select(t => new LoopModalOption
+        {
+            Text = t.ServiceName,
+            Value = t.ChoiceId.ToString()
+        }).ToArray();
+
         return new ModalForm
         {
             TriggerId = triggerId,
@@ -77,19 +89,7 @@ public class LoopService : ILoopService
                         Name = "Service",
                         Type = "select",
                         HelpText = "Какой сервис?",
-                        Options = new[]
-                        {
-                            new LoopModalOption
-                            {
-                                Text = "Сервис 1",
-                                Value = "Сервис 1"
-                            },
-                            new LoopModalOption
-                            {
-                                Text = "Сервис 2",
-                                Value = "Сервис 2"
-                            }
-                        }
+                        Options = elements
                     },
                     new Element
                     {

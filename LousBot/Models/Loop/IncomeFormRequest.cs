@@ -21,8 +21,4 @@ public class IncomeFormRequest
 
     [JsonPropertyName("team_id")]
     public string TeamId { get; init; }
-
-    //TODO: сделать 2 новых модели в зависимости от запроса, а эту сделать базовой
-    [JsonPropertyName("submission")]
-    public object Submission { get; init; }
 }

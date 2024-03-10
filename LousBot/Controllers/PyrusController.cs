@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using LousBot.Models.Loop;
-using LousBot.Service;
 using LousBot.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,25 +9,24 @@ namespace LousBot.Controllers;
 [Route("/api/[controller]")]
 public class PyrusController : ControllerBase
 {
-    private readonly ILoopService _loopService;
-    private readonly PyrusBotService _botService;
+    private IPyrusService _pyrusService;
 
-    public PyrusController(ILoopService loopService, PyrusBotService botService)
+    public PyrusController(IPyrusService pyrusService)
     {
-        _loopService = loopService;
-        _botService = botService;
+        _pyrusService = pyrusService;
     }
 
     [HttpPost("access/service")]
-    public async Task<IActionResult> PostPyrus(IncomeAccessServiceRequest request)
+    public async Task<IActionResult> PostAccessService(IncomeAccessServiceRequest request)
     {
-        await _botService.CreateFormRequest();
+        await _pyrusService.CreateAccessForm(request);
         return Ok();
     }
 
     [HttpPost("software/buy")]
-    public async Task<IActionResult> PostPyrus2(IncomeSoftwareBuyRequest request)
+    public async Task<IActionResult> PostBuySoftware(IncomeSoftwareBuyRequest request)
     {
+        await _pyrusService.CreateBuySoftwareForm(request);
         return Ok();
     }
 }

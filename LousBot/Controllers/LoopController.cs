@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using LousBot.Models.Loop;
 using LousBot.Service.Interfaces;
@@ -20,7 +19,6 @@ public class LoopController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromForm] IncomeAccessRequest request)
     {
-        Console.WriteLine($"Пришел запрос {request.command}, {request.text}");
         if (_loopService.IsValidRequest(request.text))
         {
 
@@ -30,5 +28,10 @@ public class LoopController : ControllerBase
         await _loopService.SendHelpMessage(request);
 
         return Ok();
+    }
+
+    [HttpPost("thread/update")]
+    public void UpdateThreadOnLoop()
+    {
     }
 }

@@ -4,9 +4,12 @@ namespace LousBot.Models.Loop;
 
 public class Submission
 {
-    [JsonPropertyName("justification")]
+    [JsonPropertyName("Justification")]
     public string Justification { get; set; }
 
-    [JsonPropertyName("service")]
+    [JsonPropertyName("Service")]
     public string Service { get; set; }
+
+    [JsonPropertyName("AnotherNameService")]
+    public string? AnotherNameService { get; set; }
 }

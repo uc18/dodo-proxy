@@ -5,10 +5,15 @@ namespace LousBot.Service;
 
 public class HttpService : IHttpService
 {
-    private readonly HttpClient _httpClient = new();
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public HttpService(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
 
     public HttpClient ReturnHttpClient()
     {
-        return _httpClient;
+        return _httpClientFactory.CreateClient();
     }
 }

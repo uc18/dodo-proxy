@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,14 +14,14 @@ public class LoopService : ILoopService
 {
     private readonly IOptions<ServiceDeskOptions> _options;
     private readonly IMattermostService _mattermostService;
-    private readonly PyrusBotService _pyrusBotService;
+    private readonly IPyrusApi _pyrusApi;
 
     public LoopService(IOptions<ServiceDeskOptions> options,
-        IMattermostService mattermostService, PyrusBotService pyrusBotService)
+        IMattermostService mattermostService, IPyrusApi pyrusApi)
     {
         _options = options;
         _mattermostService = mattermostService;
-        _pyrusBotService = pyrusBotService;
+        _pyrusApi = pyrusApi;
     }
 
     public bool IsValidRequest(string text)
@@ -37,11 +36,11 @@ public class LoopService : ILoopService
 
     public async Task<bool> SendForm(IncomeAccessRequest request)
     {
-        var result = await _pyrusBotService.GetForms();
+        var result = await _pyrusApi.GetForms();
         var form = request.text switch
         {
             "1" => PrepareModalFormAccessToService(request.trigger_id, result),
-            "2" => PrepareModalFormBuySoftware(request.trigger_id),
+            "2" => PrepareModalFormBuySoftware(request.trigger_id, result),
             _ => null
         };
 
@@ -60,8 +59,9 @@ public class LoopService : ILoopService
 
         if (directId != null)
         {
-            Console.WriteLine(directId.Id);
-            await _mattermostService.SendHelpMessage(directId.Id);
+            var message = $"Отправь {LetterExtension.SlashCommand} 1 для формы \"Получить доступ\". " +
+                          $"Отправь {LetterExtension.SlashCommand} 2 для формы \"Купить лицензию/сервис\" ";
+            await _mattermostService.SendPrivateMessage(directId.Id, message);
         }
     }
 
@@ -85,26 +85,33 @@ public class LoopService : ILoopService
                 {
                     new Element
                     {
-                        DisplayName = "Сервис",
+                        DisplayName = "Выбор",
                         Name = "Service",
                         Type = "select",
-                        HelpText = "Какой сервис?",
+                        HelpText = "Выбери сервис",
                         Options = elements
                     },
                     new Element
                     {
-                        DisplayName = "Для чего?",
+                        DisplayName = "Для чего нужен доступ?",
                         Name = "Justification",
                         Type = "text",
-                        HelpText = "Обоснование"
+                        HelpText = "Обоснование",
+                        Optional = true
                     }
                 }
             }
         };
     }
 
-    private ModalForm PrepareModalFormBuySoftware(string triggerId)
+    private ModalForm PrepareModalFormBuySoftware(string triggerId, IEnumerable<ServiceResponse> servicesName)
     {
+        var elements = servicesName.Select(t => new LoopModalOption
+        {
+            Text = t.ServiceName,
+            Value = t.ChoiceId.ToString()
+        }).ToArray();
+
         return new ModalForm
         {
             TriggerId = triggerId,
@@ -117,10 +124,11 @@ public class LoopService : ILoopService
                 {
                     new Element
                     {
-                        DisplayName = "Какой сервис?",
+                        DisplayName = "Выбор",
                         Name = "BuyServiceName",
-                        Type = "text",
-                        HelpText = "Какой сервис?",
+                        Type = "select",
+                        HelpText = "Выбери сервис",
+                        Options = elements
                     },
                     new Element
                     {
@@ -148,7 +156,7 @@ public class LoopService : ILoopService
                                 Value = "Franchise"
                             }
                         }
-                    },
+                    }
                 }
             }
         };

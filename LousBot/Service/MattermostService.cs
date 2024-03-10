@@ -1,10 +1,8 @@
-using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LousBot.Extension;
 using LousBot.Models.Loop;
 using LousBot.Options;
 using LousBot.Service.Interfaces;
@@ -15,7 +13,7 @@ namespace LousBot.Service;
 public class MattermostService : IMattermostService
 {
     private readonly IOptions<ServiceDeskOptions> _options;
-    private readonly BotInfoResponse _response;
+    private readonly BotInfoResponse _botInfo;
     private readonly HttpClient _client;
 
     public MattermostService(IOptions<ServiceDeskOptions> options, IHttpService httpService)
@@ -24,34 +22,30 @@ public class MattermostService : IMattermostService
         _client = httpService.ReturnHttpClient();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "Bearer", _options.Value.LoopBotOptions.BearerToken);
-        _response = GetBotId();
+        _botInfo = GetBotId();
     }
 
     private BotInfoResponse GetBotId()
     {
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"{_options.Value.LoopBotOptions.ApiUrl}/users/username/{_options.Value.LoopBotOptions.BotName}");
-        var r = _client.Send(request);
-        var info = JsonSerializer.Deserialize<BotInfoResponse>(r.Content.ReadAsStream());
-        return info;
+        var httpResponse = _client.Send(request);
+        var botId = JsonSerializer.Deserialize<BotInfoResponse>(httpResponse.Content.ReadAsStream());
+
+        return botId != null ? botId : new BotInfoResponse();
     }
 
-    public async Task SendHelpMessage(string channelId)
+    public async Task SendPrivateMessage(string channelId, string message)
     {
         var formRequest = JsonSerializer.Serialize(new OutgoingWebhookRequest
         {
             ChannelId = channelId,
-            Message = $"Отправь {LetterExtension.SlashCommand} 1 для формы \"Получить доступ\". " +
-                      $"Отправь {LetterExtension.SlashCommand} 2 для формы \"Купить ПО\" "
+            Message = message
         });
         var content = new StringContent(formRequest, Encoding.UTF8, "application/json");
 
         var stringUri = $"{_options.Value.LoopBotOptions.ApiUrl}/posts";
-        using var response = await _client.PostAsync(stringUri, content);
-
-        var rt = await response.Content.ReadAsStringAsync();
-
-        Console.WriteLine(rt + " " + response.ReasonPhrase);
+        await _client.PostAsync(stringUri, content);
     }
 
     public async Task SendForm(ModalForm form)
@@ -60,19 +54,16 @@ public class MattermostService : IMattermostService
 
         var content = new StringContent(formRequest, Encoding.UTF8,
             "application/json");
-
-        using var response = await _client.PostAsync(
+        await _client.PostAsync(
             $"{_options.Value.LoopBotOptions.ApiUrl}/actions/dialogs/open",
             content);
-
-        var rt = await response.Content.ReadAsStringAsync();
     }
 
     public async Task<DirectChannelResponse?> GetDirectChannel(string userId)
     {
         var request = JsonSerializer.Serialize(new[]
         {
-            userId, _response.Id
+            userId, _botInfo.Id
         });
 
         var content = new StringContent(request, Encoding.UTF8, "application/json");
@@ -83,5 +74,25 @@ public class MattermostService : IMattermostService
 
         var responseContent = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<DirectChannelResponse>(responseContent);
+    }
+
+    public async Task<string> GetUserEmail(string userId)
+    {
+        var stringUri = $"{_options.Value.LoopBotOptions.ApiUrl}/users/{userId}";
+        using var httpResponse = await _client.GetAsync(stringUri);
+
+        if (httpResponse.IsSuccessStatusCode)
+        {
+            var httpContentResponse = await httpResponse.Content.ReadAsStringAsync();
+
+            var botInfo = JsonSerializer.Deserialize<BotInfoResponse>(httpContentResponse);
+
+            if (botInfo != null)
+            {
+                return botInfo.Email;
+            }
+        }
+
+        return string.Empty;
     }
 }

@@ -5,7 +5,8 @@ namespace LousBot.Service.Interfaces;
 
 public interface IMattermostService
 {
-    Task SendHelpMessage(string channelId);
+    Task SendPrivateMessage(string channelId, string message);
     Task SendForm(ModalForm form);
     Task<DirectChannelResponse?> GetDirectChannel(string userId);
+    Task<string> GetUserEmail(string userId);
 }

@@ -16,6 +16,9 @@ public class Element
     [JsonPropertyName("help_text")]
     public string HelpText { get; set; }
 
+    [JsonPropertyName("optional")]
+    public bool Optional { get; set; }
+
     [JsonPropertyName("options")]
     public LoopModalOption[] Options { get; set; }
 }

@@ -15,7 +15,7 @@ public class PyrusApi : IPyrusApi
 {
     private readonly IOptions<ServiceDeskOptions> _options;
     private readonly PyrusClient _client;
-    private const int FormId = 1383275;
+    private const int BuySoftwareFormId = 1383275;
     private const int ChoiceFieldId = 2;
 
     public PyrusApi(IOptions<ServiceDeskOptions> options)
@@ -28,7 +28,7 @@ public class PyrusApi : IPyrusApi
     {
         await _client.Auth(_options.Value.PyrusBotOptions.Login,
             _options.Value.PyrusBotOptions.Token);
-        var form = await RequestBuilder.GetForm(FormId).Process(_client);
+        var form = await RequestBuilder.GetForm(BuySoftwareFormId).Process(_client);
         var accessFields = form.Fields.FirstOrDefault(t => t.Id == ChoiceFieldId);
         var i = accessFields.Info.Options.Select(t => new ServiceResponse
         {
@@ -70,7 +70,7 @@ public class PyrusApi : IPyrusApi
     private async Task<int> SendRequest(CreateTicketRequest request, int whatDo)
     {
         var existRequestOnPyrus = await RequestBuilder
-            .CreateFormTask(FormId)
+            .CreateFormTask(BuySoftwareFormId)
             .Fields
             .Add(FormField.Create<FormFieldText>(DodoConstants.Email).WithValue($"{request.Email}"))
             .Add(FormField.Create<FormFieldMultipleChoice>(DodoConstants.WhatDo).WithChoice(whatDo))
@@ -85,7 +85,7 @@ public class PyrusApi : IPyrusApi
     private async Task<int> SendRequestWithAnother(CreateTicketRequest request, int whatDo)
     {
         var existRequestOnPyrus = await RequestBuilder
-            .CreateFormTask(FormId)
+            .CreateFormTask(BuySoftwareFormId)
             .Fields
             .Add(FormField.Create<FormFieldText>(DodoConstants.Email).WithValue($"{request.Email}"))
             .Add(FormField.Create<FormFieldMultipleChoice>(DodoConstants.WhatDo).WithChoice(whatDo))

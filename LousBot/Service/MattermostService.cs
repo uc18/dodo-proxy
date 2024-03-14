@@ -35,7 +35,7 @@ public class MattermostService : IMattermostService
         return botId != null ? botId : new BotInfoResponse();
     }
 
-    public async Task SendPrivateMessage(string channelId, string message)
+    public async Task<MessageResponse?> SendPrivateMessage(string channelId, string message)
     {
         var formRequest = JsonSerializer.Serialize(new OutgoingWebhookRequest
         {
@@ -45,7 +45,45 @@ public class MattermostService : IMattermostService
         var content = new StringContent(formRequest, Encoding.UTF8, "application/json");
 
         var stringUri = $"{_options.Value.LoopBotOptions.ApiUrl}/posts";
-        await _client.PostAsync(stringUri, content);
+        using var response = await _client.PostAsync(stringUri, content);
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<MessageResponse>(responseContent);
+    }
+
+    public async Task<MessageResponse?> SendMessageOnThread(string channelId, string message, string rootId)
+    {
+        var formRequest = JsonSerializer.Serialize(new OutgoingWebhookRequest
+        {
+            ChannelId = channelId,
+            Message = message,
+            RootId = rootId
+        });
+        var content = new StringContent(formRequest, Encoding.UTF8, "application/json");
+
+        var stringUri = $"{_options.Value.LoopBotOptions.ApiUrl}/posts";
+        using var response = await _client.PostAsync(stringUri, content);
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<MessageResponse>(responseContent);
+    }
+
+    public async Task<MessageResponse?> UpdateMessage(string textMessage, string messageId)
+    {
+        var formRequest = JsonSerializer.Serialize(new OutgoingWebhookRequest
+        {
+            Message = textMessage
+        });
+        var content = new StringContent(formRequest, Encoding.UTF8, "application/json");
+
+        var stringUri = $"{_options.Value.LoopBotOptions.ApiUrl}/posts/{messageId}/patch";
+        using var response = await _client.PutAsync(stringUri, content);
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<MessageResponse>(responseContent);
     }
 
     public async Task SendForm(ModalForm form)
@@ -94,5 +132,20 @@ public class MattermostService : IMattermostService
         }
 
         return string.Empty;
+    }
+
+    public MessageResponse GetChannelId(string messageId)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get,
+            $"{_options.Value.LoopBotOptions.ApiUrl}/posts/{messageId}");
+        var httpResponse = _client.Send(request);
+        var messageResponse = JsonSerializer.Deserialize<MessageResponse>(httpResponse.Content.ReadAsStream());
+
+        if (messageResponse != null)
+        {
+            return messageResponse;
+        }
+
+        return null;
     }
 }

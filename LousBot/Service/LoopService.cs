@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LousBot.Extension;
 using LousBot.Models.Loop;
 using LousBot.Models.Pyrus;
+using LousBot.Models.Pyrus.Request;
 using LousBot.Options;
 using LousBot.Service.Interfaces;
 using Microsoft.Extensions.Options;
@@ -62,6 +63,17 @@ public class LoopService : ILoopService
             var message = $"Отправь {LetterExtension.SlashCommand} 1 для формы \"Получить доступ\". " +
                           $"Отправь {LetterExtension.SlashCommand} 2 для формы \"Купить лицензию/сервис\" ";
             await _mattermostService.SendPrivateMessage(directId.Id, message);
+        }
+    }
+
+    public async Task SendUpdateMessage(UpdateLoopThread updateRequest)
+    {
+        var response = _mattermostService.GetChannelId(updateRequest.ThreadId);
+
+        if (response != null)
+        {
+            await _mattermostService.SendMessageOnThread(response.ChannelId, updateRequest.Comment,
+                updateRequest.ThreadId);
         }
     }
 

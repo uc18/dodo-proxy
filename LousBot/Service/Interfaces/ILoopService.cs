@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using LousBot.Models.Loop;
+using LousBot.Models.Pyrus.Request;
 
 namespace LousBot.Service.Interfaces;
 
@@ -10,4 +11,6 @@ public interface ILoopService
     Task<bool> SendForm(IncomeAccessRequest request);
 
     Task SendHelpMessage(IncomeAccessRequest request);
+
+    Task SendUpdateMessage(UpdateLoopThread updateRequest);
 }

@@ -68,7 +68,7 @@ public class LoopService : ILoopService
 
     public async Task SendUpdateMessage(UpdateLoopThread updateRequest)
     {
-        var response = _mattermostService.GetChannelId(updateRequest.ThreadId);
+        var response = _mattermostService.GetInfoAboutMessage(updateRequest.ThreadId);
 
         if (response != null)
         {

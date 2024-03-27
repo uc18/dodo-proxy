@@ -12,5 +12,5 @@ public interface IMattermostService
     Task<DirectChannelResponse?> GetDirectChannel(string userId);
     Task<string> GetUserEmail(string userId);
 
-    MessageResponse GetChannelId(string messageId);
+    MessageResponse GetInfoAboutMessage(string messageId);
 }

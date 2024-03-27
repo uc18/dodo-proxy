@@ -30,13 +30,13 @@ public class PyrusApi : IPyrusApi
             _options.Value.PyrusBotOptions.Token);
         var form = await RequestBuilder.GetForm(BuySoftwareFormId).Process(_client);
         var accessFields = form.Fields.FirstOrDefault(t => t.Id == ChoiceFieldId);
-        var i = accessFields.Info.Options.Select(t => new ServiceResponse
+
+        var existsForms = accessFields.Info.Options.Select(t => new ServiceResponse
         {
             ChoiceId = t.ChoiceId,
             ServiceName = t.ChoiceValue
         }).ToList();
-
-        return i;
+        return existsForms;
     }
 
     public async Task<int> CreateRequestToAccess(CreateTicketRequest request)
@@ -65,6 +65,22 @@ public class PyrusApi : IPyrusApi
         }
 
         return await SendRequest(request, buySoftware);
+    }
+
+    public async Task<int> SendCommentToPyrusTask(string taskIdFromRequest, string newComment)
+    {
+        var isInt = int.TryParse(taskIdFromRequest, out var taskId);
+
+        if (isInt)
+        {
+            await _client.Auth(_options.Value.PyrusBotOptions.Login,
+                _options.Value.PyrusBotOptions.Token);
+
+            await RequestBuilder.CommentFormTask(taskId).WithText(newComment).Process(_client);
+        }
+
+        //TODO: можно переписать на нормальный тип данных
+        return 1;
     }
 
     private async Task<int> SendRequest(CreateTicketRequest request, int whatDo)

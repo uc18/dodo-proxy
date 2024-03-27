@@ -29,9 +29,4 @@ public class LoopController : ControllerBase
 
         return Ok();
     }
-
-    [HttpPost("thread/update")]
-    public void UpdateThreadOnLoop()
-    {
-    }
 }

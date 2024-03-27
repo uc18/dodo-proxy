@@ -16,6 +16,7 @@ builder.Services.AddScoped<IMattermostService, MattermostService>();
 builder.Services.AddScoped<IPyrusApi, PyrusApi>();
 builder.Services.AddScoped<ILoopService, LoopService>();
 builder.Services.AddScoped<IPyrusService, PyrusService>();
+builder.Services.AddHostedService<LoopBackgroundService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -30,6 +31,7 @@ if (app.Environment.IsDevelopment())
 
 //app.UseAuthorization();
 
+//app.MapHealthChecks("/healthz");
 app.MapControllers();
 
 app.Run();

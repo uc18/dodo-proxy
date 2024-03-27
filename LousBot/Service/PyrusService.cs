@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using LousBot.Models.Loop;
+using LousBot.Models.Loop.WebSocket;
 using LousBot.Models.Pyrus;
 using LousBot.Models.Pyrus.Request;
 using LousBot.Options;
@@ -9,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Pyrus.ApiClient.JsonConverters;
 using PyrusApiClient;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 using Task = System.Threading.Tasks.Task;
 
 namespace LousBot.Service;
@@ -57,11 +60,11 @@ public class PyrusService : IPyrusService
             {
                 var emptyMessage = "Был создан тикет в Пайрусе";
                 var response = await _mattermostService.SendPrivateMessage(directId.Id, emptyMessage);
-                var t = new CreateTicketRequest(userEmail, serviceId, request.Submission.Justification,
+                var tickerRequest = new CreateTicketRequest(userEmail, serviceId, request.Submission.Justification,
                     request.Submission.AnotherNameService, response.Id);
-                var s = await _apiService.CreateRequestToBuySoftware(t);
-                var message = $"Был создан тикет в Пайрусе {_options.Value.PyrusBotOptions.PyrusUrl}id{s}";
-                await _mattermostService.SendPrivateMessage(directId.Id, message);
+                var numberOfTicket = await _apiService.CreateRequestToBuySoftware(tickerRequest);
+                var message = $"Был создан тикет в Пайрусе {_options.Value.PyrusBotOptions.PyrusUrl}id{numberOfTicket}";
+                await _mattermostService.UpdateMessage(message, response.Id);
             }
         }
     }
@@ -100,5 +103,51 @@ public class PyrusService : IPyrusService
         }
 
         return null;
+    }
+
+    public async Task<int> SendCommentFromLoop(string taskIdFromRequest, string newComment)
+    {
+        await _apiService.SendCommentToPyrusTask(taskIdFromRequest, newComment);
+
+        //TODO: это число ничего не значит, можно переписать
+        return 1;
+    }
+
+    public async Task SendComment(string webSocketUpdate)
+    {
+        var response = JsonSerializer.Deserialize<Response>(webSocketUpdate);
+
+        if (response != null && response.Event.ToLower() == "posted" && response.Data.SenderName != "@it-office-bot")
+        {
+            var messageResponse = _mattermostService.GetInfoAboutMessage(response.Data.Post.RootId);
+            if (messageResponse != null)
+            {
+                var pyrusTask = GetPyrusTaskId(messageResponse.Message);
+
+                await _apiService.SendCommentToPyrusTask(pyrusTask, response.Data.Post.Message);
+            }
+        }
+    }
+
+    private string GetPyrusTaskId(string messageFromLoop)
+    {
+        const int threadIdWithSharp = 1;
+        const string startOnUrl = "h";
+        const string sharp = "#";
+        var lettersFromMessage = messageFromLoop.Split(" ");
+
+        if (lettersFromMessage.Length > 0)
+        {
+            foreach (var letter in lettersFromMessage)
+            {
+                if (letter.StartsWith(startOnUrl))
+                {
+                    var pyrusTask = letter.Split(sharp);
+                    return pyrusTask[threadIdWithSharp].Remove(0, 2);
+                }
+            }
+        }
+
+        return string.Empty;
     }
 }

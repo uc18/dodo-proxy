@@ -9,4 +9,7 @@ public record MessageResponse
 
     [JsonPropertyName("channel_id")]
     public string ChannelId { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; }
 }

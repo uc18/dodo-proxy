@@ -9,4 +9,6 @@ public interface IPyrusService
     Task CreateAccessForm(IncomeAccessServiceRequest request);
     Task CreateBuySoftwareForm(IncomeSoftwareBuyRequest request);
     UpdateLoopThread GetMessageFromPyrusRequest(PyrusTask pyrusTask);
+    Task<int> SendCommentFromLoop(string taskIdFromRequest, string newComment);
+    Task SendComment(string webSocketUpdate);
 }

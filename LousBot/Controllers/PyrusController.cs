@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using LousBot.Models.Loop;
+using LousBot.Models.Pyrus;
 using LousBot.Models.Pyrus.Request;
 using LousBot.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -37,13 +38,28 @@ public class PyrusController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CaptureRequest(PyrusTask pyrusTask, CancellationToken ct)
     {
-        var t = _pyrusService.GetMessageFromPyrusRequest(pyrusTask);
+        var messageForLoop = _pyrusService.GetMessageFromPyrusRequest(pyrusTask);
 
-        if (t != null)
+        if (messageForLoop != null)
         {
-            await _loopService.SendUpdateMessage(t);
+            await _loopService.SendUpdateMessage(messageForLoop);
+            return Ok(new CaptureResponse
+            {
+                Text = string.Empty,
+                ApprovalChoice = "approved"
+            });
         }
 
         return Ok();
+    }
+
+    [HttpGet("tet")]
+    public async Task<IActionResult> TestRequest()
+    {
+        return Ok(new CaptureResponse
+        {
+            Text = string.Empty,
+            ApprovalChoice = "approved"
+        });
     }
 }

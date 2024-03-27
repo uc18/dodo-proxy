@@ -134,7 +134,7 @@ public class MattermostService : IMattermostService
         return string.Empty;
     }
 
-    public MessageResponse GetChannelId(string messageId)
+    public MessageResponse GetInfoAboutMessage(string messageId)
     {
         var request = new HttpRequestMessage(HttpMethod.Get,
             $"{_options.Value.LoopBotOptions.ApiUrl}/posts/{messageId}");

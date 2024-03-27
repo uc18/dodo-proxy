@@ -9,4 +9,5 @@ public interface IPyrusApi
     Task<List<ServiceResponse>> GetForms();
     Task<int> CreateRequestToAccess(CreateTicketRequest request);
     Task<int> CreateRequestToBuySoftware(CreateTicketRequest request);
+    Task<int> SendCommentToPyrusTask(string taskIdFromRequest, string newComment);
 }

@@ -10,7 +10,5 @@ public record LoopBot
 
     public string BotName { get; init; }
 
-    public string BotToken { get; init; }
-
     public string BearerToken { get; init; }
 }
